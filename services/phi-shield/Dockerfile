@@ -1,0 +1,12 @@
+# Copyright (c) 2026 Amit Chougule. All rights reserved.
+# syntax=docker/dockerfile:1
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+RUN useradd --system --uid 10001 app
+WORKDIR /app
+COPY pyproject.toml ./
+COPY src src
+RUN pip install .
+USER app
+EXPOSE 8000
+CMD ["sh", "-c", "uvicorn phi_shield.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
