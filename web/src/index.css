@@ -1,0 +1,56 @@
+/* Copyright (c) 2026 Amit Chougule. All rights reserved. */
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background-color: #ffffff;
+}
+
+body {
+  margin: 0;
+}
+
+.synthetic-banner {
+  background: #fff3cd;
+  color: #3d2e00;
+  border-bottom: 2px solid #8a6d00;
+  padding: 0.5rem 1rem;
+  text-align: center;
+}
+
+.app-header,
+main {
+  padding: 1rem;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  background: #ffffff;
+  padding: 0.5rem;
+}
+
+:focus-visible {
+  outline: 3px solid #0b5fff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
