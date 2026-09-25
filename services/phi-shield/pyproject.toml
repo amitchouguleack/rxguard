@@ -1,0 +1,47 @@
+# Copyright (c) 2026 Amit Chougule. All rights reserved.
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phi-shield"
+version = "0.0.1"
+description = "RxGuard de-identification, terminology normalization, and access-anomaly detection."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi==0.141.1",
+  "uvicorn[standard]==0.54.0",
+  "pydantic==2.13.5",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.1.1",
+  "pytest-cov==7.1.0",
+  "httpx==0.28.1",
+  "ruff==0.16.9",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --cov=phi_shield --cov-report=term-missing --cov-fail-under=85"
+markers = ["req(id): requirement ID this test verifies (see docs/regulatory/REQUIREMENTS.yml)"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+preview = true
+explicit-preview-rules = true
+select = ["E", "F", "W", "I", "B", "UP", "S", "CPY001"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.ruff.lint.flake8-copyright]
+notice-rgx = "(?i)Copyright \\(c\\) \\d{4} Amit Chougule\\. All rights reserved\\."
+min-file-size = 1

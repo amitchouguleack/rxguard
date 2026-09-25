@@ -1,0 +1,288 @@
+# Copyright (c) 2026 Amit Chougule. All rights reserved.
+# RxGuard requirements baseline. Every test that verifies a requirement is tagged with its ID
+# (see TEST_TAGGING.md). The traceability matrix is generated from this file in CI (Phase 13).
+#
+# status: planned | in-progress | implemented
+# verification: Test | Inspection | Analysis | Demonstration
+# risk: hazard IDs from RISK_ANALYSIS.md (empty list if none)
+
+requirements:
+  # ---------- Operations ----------
+  - id: REQ-OPS-001
+    title: Liveness endpoint
+    description: Each service shall expose GET /health returning status UP and its service name.
+    rationale: The UI "Waking up services" panel, smoke tests, and uptime checks depend on it.
+    risk: []
+    verification: Test
+    phase: 0
+    status: implemented
+
+  # ---------- UI ----------
+  - id: REQ-UI-001
+    title: Synthetic-data notice
+    description: Every UI screen and service root response shall show "SYNTHETIC DATA — NOT FOR CLINICAL USE".
+    rationale: Prevents the demo from being mistaken for a clinical tool.
+    risk: [RISK-010]
+    verification: Test
+    phase: 0
+    status: implemented
+  - id: REQ-UI-002
+    title: Keyboard-accessible structure
+    description: The UI shall provide a skip link to the main landmark, visible focus, and a full keyboard-only flow, targeting WCAG 2.2 AA.
+    rationale: Clinicians and patients who use assistive technology must be able to use every screen.
+    risk: [RISK-002]
+    verification: Test
+    phase: 11
+    status: in-progress
+  - id: REQ-UI-003
+    title: Tall Man lettering
+    description: Look-alike drug names shall be displayed with Tall Man lettering from the FDA/ISMP lists.
+    rationale: Reduces look-alike/sound-alike selection errors.
+    risk: [RISK-003]
+    verification: Test
+    phase: 11
+    status: planned
+  - id: REQ-UI-004
+    title: Safe dose notation
+    description: Dose entry shall require a leading zero and reject trailing zeros, and units shall always be explicit.
+    rationale: ISMP / Joint Commission "Do Not Use" guidance against tenfold dosing errors.
+    risk: [RISK-003]
+    verification: Test
+    phase: 11
+    status: planned
+  - id: REQ-UI-005
+    title: Persistent patient banner
+    description: Every clinical screen shall show a patient banner with name, DOB, age, allergies, and latest eGFR with its date.
+    rationale: Reduces wrong-patient errors.
+    risk: [RISK-002]
+    verification: Test
+    phase: 11
+    status: planned
+
+  # ---------- Prescriptions ----------
+  - id: REQ-RX-001
+    title: NPI validation
+    description: Prescriber NPIs shall pass the Luhn check with the 80840 prefix.
+    rationale: Catches mistyped or fabricated prescriber identifiers.
+    risk: [RISK-006]
+    verification: Test
+    phase: 2
+    status: planned
+  - id: REQ-RX-002
+    title: DEA number validation
+    description: DEA numbers shall be 2 letters + 7 digits and pass the DEA checksum.
+    rationale: Controlled-substance prescribing requires a valid DEA registration.
+    risk: [RISK-006]
+    verification: Test
+    phase: 2
+    status: planned
+  - id: REQ-RX-003
+    title: Schedule II rules
+    description: CII prescriptions shall have no refills, and the prescriber shall hold a DEA number.
+    rationale: Modeled on DEA rules for Schedule II substances.
+    risk: [RISK-005]
+    verification: Test
+    phase: 2
+    status: planned
+  - id: REQ-RX-004
+    title: Schedule III–V refill limit
+    description: CIII–CV prescriptions shall allow at most 5 refills, and every controlled prescription shall carry an ICD-10-CM indication.
+    rationale: Modeled on DEA refill limits; the indication supports clinical review.
+    risk: [RISK-005]
+    verification: Test
+    phase: 2
+    status: planned
+  - id: REQ-RX-005
+    title: Days-supply bounds
+    description: daysSupply shall be between 1 and 90 inclusive.
+    rationale: Rejects implausible quantities.
+    risk: [RISK-003]
+    verification: Test
+    phase: 2
+    status: planned
+  - id: REQ-RX-006
+    title: Prescription state machine
+    description: Prescriptions shall follow the defined state machine, and invalid transitions shall return HTTP 409.
+    rationale: Prevents dispensing cancelled or unsigned prescriptions.
+    risk: [RISK-007]
+    verification: Test
+    phase: 5
+    status: planned
+
+  # ---------- Clinical decision support ----------
+  - id: REQ-CDS-001
+    title: Drug-drug interaction check
+    description: The interaction engine shall flag known interacting ingredient pairs symmetrically (A+B equals B+A) and deterministically.
+    rationale: Missed interactions can cause patient harm.
+    risk: [RISK-001]
+    verification: Test
+    phase: 6
+    status: planned
+  - id: REQ-CDS-002
+    title: Allergy check
+    description: The engine shall flag a medication whose ingredient or substance class matches a recorded patient allergy.
+    rationale: Prevents prescribing to a documented allergy.
+    risk: [RISK-001]
+    verification: Test
+    phase: 6
+    status: planned
+  - id: REQ-CDS-003
+    title: Renal dose check
+    description: Drugs with a renal dose rule shall warn when the latest LOINC-coded eGFR is below threshold, and advise when no recent eGFR exists.
+    rationale: Renally cleared drugs can accumulate to harmful levels.
+    risk: [RISK-001, RISK-003]
+    verification: Test
+    phase: 5
+    status: planned
+  - id: REQ-CDS-004
+    title: Human-in-the-loop risk scoring
+    description: Misuse risk scores shall show human-readable reasons and shall never auto-block a prescription.
+    rationale: Clinicians must be able to review the basis for each recommendation (FDA non-device CDS criteria).
+    risk: [RISK-005, RISK-009]
+    verification: Test
+    phase: 5
+    status: planned
+  - id: REQ-CDS-005
+    title: Alert tiering and override reasons
+    description: Only contraindicated or severe alerts shall be interruptive; overrides shall require a reason, and override rates shall be recorded per rule.
+    rationale: Reduces alert fatigue while keeping serious alerts visible.
+    risk: [RISK-009]
+    verification: Test
+    phase: 5
+    status: planned
+
+  # ---------- PHI protection ----------
+  - id: REQ-PHI-001
+    title: Field-level encryption at rest
+    description: Patient identifiers shall be stored AES-256-GCM encrypted with a key ID supporting rotation.
+    rationale: HIPAA Security Rule §164.312(a)(2)(iv) safeguard.
+    risk: [RISK-004]
+    verification: Test
+    phase: 4
+    status: planned
+  - id: REQ-PHI-002
+    title: Tamper-evident audit log
+    description: Every PHI read or write shall produce an append-only, hash-chained audit event, verifiable through GET /api/audit/verify.
+    rationale: HIPAA Security Rule §164.312(b) audit controls.
+    risk: [RISK-004, RISK-008]
+    verification: Test
+    phase: 4
+    status: planned
+  - id: REQ-PHI-003
+    title: No PHI in logs
+    description: No service shall write seeded synthetic patient names or identifiers to logs.
+    rationale: Logs are widely accessible and often shipped to third parties.
+    risk: [RISK-004]
+    verification: Test
+    phase: 4
+    status: planned
+  - id: REQ-PHI-004
+    title: Safe Harbor de-identification
+    description: Analytics exports shall remove the 18 HIPAA Safe Harbor identifiers and include only consenting patients.
+    rationale: HIPAA §164.514(b)(2).
+    risk: [RISK-004]
+    verification: Test
+    phase: 8
+    status: planned
+  - id: REQ-PHI-005
+    title: Break-glass access
+    description: Emergency access shall require a reason and be flagged in the audit log and auditor view.
+    rationale: HIPAA §164.312(a)(2)(ii) emergency access procedure.
+    risk: [RISK-004]
+    verification: Test
+    phase: 4
+    status: planned
+
+  # ---------- Security ----------
+  - id: REQ-SEC-001
+    title: No secrets in the repository
+    description: The repository shall contain no secrets or credentials, verified by secret scanning in CI.
+    rationale: Leaked keys compromise every environment.
+    risk: [RISK-004]
+    verification: Test
+    phase: 13
+    status: planned
+  - id: REQ-SEC-002
+    title: End-to-end payload encryption
+    description: NCPDP payloads between rx-gateway and pharmacy-system shall be JWE-encrypted and HMAC-SHA256 signed.
+    rationale: Protects PHI beyond TLS termination points.
+    risk: [RISK-004, RISK-007]
+    verification: Test
+    phase: 4
+    status: planned
+  - id: REQ-SEC-003
+    title: Replay protection
+    description: Signed service messages shall carry a timestamp and nonce, and replays or out-of-window messages shall be rejected.
+    rationale: Prevents duplicate dispensing from captured messages.
+    risk: [RISK-007]
+    verification: Test
+    phase: 7
+    status: planned
+
+  # ---------- Authentication and authorization ----------
+  - id: REQ-AUTH-001
+    title: OAuth2 authorization code with PKCE
+    description: User-facing apps shall authenticate through OIDC authorization code flow with PKCE required.
+    rationale: Industry-standard protection against code interception.
+    risk: [RISK-006]
+    verification: Test
+    phase: 3
+    status: planned
+  - id: REQ-AUTH-002
+    title: SMART scope enforcement
+    description: Every FHIR interaction shall enforce SMART v2 scopes, returning 403 for insufficient scope.
+    rationale: Least-privilege access per HL7 SMART App Launch.
+    risk: [RISK-004]
+    verification: Test
+    phase: 3
+    status: planned
+  - id: REQ-AUTH-003
+    title: Patient context isolation
+    description: A token with a patient launch context shall not read another patient's data.
+    rationale: Prevents cross-patient disclosure through patient-facing apps.
+    risk: [RISK-002, RISK-004]
+    verification: Test
+    phase: 3
+    status: planned
+  - id: REQ-AUTH-004
+    title: EPCS two-factor signing
+    description: Signing a CII–CV prescription shall require password plus a fresh TOTP step-up (valid 5 minutes), and every EPCS signing shall be audited.
+    rationale: Modeled on DEA EPCS rules (21 CFR Part 1311).
+    risk: [RISK-005, RISK-006]
+    verification: Test
+    phase: 3
+    status: planned
+  - id: REQ-AUTH-005
+    title: Service client credentials
+    description: Service-to-service calls shall use OAuth2 client-credentials tokens with narrow scopes.
+    rationale: Unique, least-privilege identities for services.
+    risk: [RISK-004]
+    verification: Test
+    phase: 3
+    status: planned
+
+  # ---------- Interoperability ----------
+  - id: REQ-INT-001
+    title: HL7 v2 intake with ACK
+    description: ADT^A04/A08 and ORU^R01 messages shall be parsed and answered with AA, AE, or AR, and malformed input shall never crash the listener.
+    rationale: Hospitals send registrations and labs as HL7 v2.
+    risk: [RISK-002, RISK-001]
+    verification: Test
+    phase: 9
+    status: planned
+  - id: REQ-INT-002
+    title: FHIR R4 validation
+    description: Every FHIR resource sent or received shall validate against base R4 and US Core where feasible.
+    rationale: Interoperability with EHRs and SMART apps.
+    risk: [RISK-007]
+    verification: Test
+    phase: 10
+    status: planned
+  - id: REQ-INT-003
+    title: NCPDP message schema validation
+    description: The pharmacy shall validate NewRx/CancelRx XML against the schema in contracts/ before storing it.
+    rationale: Rejects malformed prescriptions at the boundary.
+    risk: [RISK-007]
+    verification: Test
+    phase: 7
+    status: planned

@@ -1,0 +1,10 @@
+root = false
+
+[*.cs]
+indent_size = 4
+file_header_template = Copyright (c) 2026 Amit Chougule. All rights reserved.
+dotnet_diagnostic.IDE0073.severity = error
+csharp_style_namespace_declarations = file_scoped:error
+dotnet_diagnostic.IDE0161.severity = error
+# xUnit test method names use underscores for readability
+dotnet_diagnostic.CA1707.severity = none

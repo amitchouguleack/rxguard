@@ -1,0 +1,1 @@
+# Copyright (c) 2026 Amit Chougule. All rights reserved.

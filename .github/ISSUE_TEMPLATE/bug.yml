@@ -1,0 +1,38 @@
+name: Bug
+description: Something is broken. Each bug also gets an ENGINEERING_JOURNAL.md entry.
+labels: [bug]
+body:
+  - type: textarea
+    id: symptom
+    attributes:
+      label: Symptom
+      description: What happened? Paste the exact error message, trimmed. Never paste real PHI.
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. docker compose --profile ... up\n2. ..."
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations: { required: true }
+  - type: dropdown
+    id: service
+    attributes:
+      label: Service
+      options: [rx-gateway, interaction-engine, pharmacy-system, phi-shield, web, ci/cd, infra]
+    validations: { required: true }
+  - type: input
+    id: requirement
+    attributes:
+      label: Requirement affected
+      placeholder: REQ-...
+  - type: dropdown
+    id: safety
+    attributes:
+      label: Patient-safety or PHI impact?
+      options: ["No", "Yes: patient safety", "Yes: PHI exposure"]
+    validations: { required: true }

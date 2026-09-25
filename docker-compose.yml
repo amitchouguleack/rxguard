@@ -1,0 +1,66 @@
+# Copyright (c) 2026 Amit Chougule. All rights reserved.
+# Start only what you need on the 2-core Codespace, for example:
+#   docker compose --profile phi up
+#   docker compose --profile full up
+# Profiles: db, gateway, pharmacy, phi, fhir-server, observability, full
+
+name: rxguard
+
+services:
+  db:
+    image: postgres:17-alpine
+    profiles: [db, gateway, pharmacy, full]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rxguard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rxguard-local-dev}
+      POSTGRES_DB: ${POSTGRES_DB:-rxguard}
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rx-gateway:
+    build: ./services/rx-gateway
+    profiles: [gateway, full]
+    ports: ["8080:8080"]
+    depends_on:
+      db: { condition: service_healthy }
+
+  pharmacy-system:
+    build: ./services/pharmacy-system
+    profiles: [pharmacy, full]
+    ports: ["8081:8081"]
+    depends_on:
+      db: { condition: service_healthy }
+
+  phi-shield:
+    build: ./services/phi-shield
+    profiles: [phi, full]
+    ports: ["8000:8000"]
+
+  fhir-server:
+    image: hapiproject/hapi:v8.12.0-1
+    profiles: [fhir-server]
+    ports: ["8090:8080"]
+
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    profiles: [observability]
+    ports: ["9090:9090"]
+    volumes: [./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro]
+
+  grafana:
+    image: grafana/grafana:13.2.2
+    profiles: [observability]
+    ports: ["3000:3000"]
+
+  jaeger:
+    image: jaegertracing/jaeger:2.21.0
+    profiles: [observability]
+    ports: ["16686:16686", "4317:4317", "4318:4318"]
+
+volumes:
+  pgdata:

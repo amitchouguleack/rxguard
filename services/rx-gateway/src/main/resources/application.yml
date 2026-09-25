@@ -1,0 +1,11 @@
+# Copyright (c) 2026 Amit Chougule. All rights reserved.
+spring:
+  application:
+    name: rx-gateway
+server:
+  port: ${PORT:8080}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,50 @@
+# Copyright (c) 2026 Amit Chougule. All rights reserved.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /services/rx-gateway
+    schedule: { interval: weekly }
+    labels: [dependencies, svc:rx-gateway]
+    groups:
+      spring: { patterns: ["org.springframework*"] }
+
+  - package-ecosystem: nuget
+    directory: /services/pharmacy-system
+    schedule: { interval: weekly }
+    labels: [dependencies, svc:pharmacy-system]
+    ignore:
+      # 8.x moved to a commercial license; 7.x is the last Apache-2.0 line.
+      - dependency-name: FluentAssertions
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: pip
+    directory: /services/phi-shield
+    schedule: { interval: weekly }
+    labels: [dependencies, svc:phi-shield]
+
+  - package-ecosystem: npm
+    directory: /web
+    schedule: { interval: weekly }
+    labels: [dependencies, svc:web]
+    ignore:
+      # eslint-plugin-jsx-a11y 6.10.2 declares peer support only up to ESLint 9.
+      - dependency-name: eslint
+        update-types: [version-update:semver-major]
+      - dependency-name: "@eslint/js"
+        update-types: [version-update:semver-major]
+    groups:
+      testing: { patterns: ["vitest", "@testing-library/*", "jsdom"] }
+      lint: { patterns: ["eslint*", "@eslint/*", "typescript-eslint", "prettier"] }
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    labels: [dependencies, ci]
+
+  - package-ecosystem: docker
+    directories:
+      - /services/rx-gateway
+      - /services/pharmacy-system
+      - /services/phi-shield
+    schedule: { interval: weekly }
+    labels: [dependencies, infra]

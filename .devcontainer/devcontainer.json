@@ -1,0 +1,50 @@
+{
+  "name": "RxGuard",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "hostRequirements": { "cpus": 2, "memory": "8gb" },
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": { "version": "25", "jdkDistro": "tem", "installMaven": "true" },
+    "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "mounts": [
+    "source=rxguard-emsdk,target=/opt/emsdk,type=volume",
+    "source=rxguard-m2,target=/home/vscode/.m2,type=volume"
+  ],
+  "containerEnv": {
+    "EMSDK_VERSION": "6.0.10",
+    "EMSDK": "/opt/emsdk"
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "forwardPorts": [5173, 8080, 8081, 8000, 5432, 2575, 8090, 9090, 3000, 16686],
+  "portsAttributes": {
+    "5173": { "label": "web (Vite)" },
+    "8080": { "label": "rx-gateway" },
+    "8081": { "label": "pharmacy-system" },
+    "8000": { "label": "phi-shield" },
+    "5432": { "label": "postgres" },
+    "2575": { "label": "HL7 v2 MLLP" },
+    "8090": { "label": "HAPI FHIR server" },
+    "9090": { "label": "prometheus" },
+    "3000": { "label": "grafana" },
+    "16686": { "label": "jaeger" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "ms-dotnettools.csdevkit",
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}

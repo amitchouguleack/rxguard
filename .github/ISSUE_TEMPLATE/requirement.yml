@@ -1,0 +1,33 @@
+name: Requirement
+description: Add or change an entry in docs/regulatory/REQUIREMENTS.yml.
+labels: [requirement]
+body:
+  - type: input
+    id: id
+    attributes:
+      label: Requirement ID
+      placeholder: REQ-SEC-012
+    validations: { required: true }
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: One testable "shall" statement.
+    validations: { required: true }
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+    validations: { required: true }
+  - type: input
+    id: risk
+    attributes:
+      label: Risk link
+      placeholder: RISK-... (docs/regulatory/RISK_ANALYSIS.md) or "none"
+    validations: { required: true }
+  - type: dropdown
+    id: verification
+    attributes:
+      label: Verification method
+      options: [Test, Inspection, Analysis, Demonstration]
+    validations: { required: true }
