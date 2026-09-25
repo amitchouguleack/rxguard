@@ -1,0 +1,54 @@
+# OS / editors
+.DS_Store
+*.swp
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Java
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# .NET
+bin/
+obj/
+*.user
+TestResults/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.egg-info/
+
+# C++
+build/
+build-*/
+cmake-build-*/
+compile_commands.json
+crash-*
+leak-*
+timeout-*
+
+# Web
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# Test reports
+reports/
