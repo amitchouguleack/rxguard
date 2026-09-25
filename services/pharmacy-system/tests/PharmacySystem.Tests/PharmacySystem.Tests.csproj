@@ -4,7 +4,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="coverlet.collector" Version="10.0.1" />
     <!-- Pinned to 7.x: the last Apache-2.0 release line. 8.x uses a commercial license. -->
     <PackageReference Include="FluentAssertions" Version="7.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
