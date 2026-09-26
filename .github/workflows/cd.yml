@@ -1,0 +1,145 @@
+# Copyright (c) 2026 Amit Chougule. All rights reserved.
+# Continuous delivery. Runs after ci succeeds on main (or on demand):
+#   image (GHCR, git-SHA tag) -> Render deploy hook -> smoke test; web -> GitHub Pages.
+# Deploy targets are switched on with repository variables, so the pipeline can land before the
+# hosting accounts exist: RENDER_DEPLOY_ENABLED, PAGES_ENABLED (set to 'true').
+name: cd
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-main
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/amitchouguleack/rxguard-rx-gateway
+
+jobs:
+  image:
+    name: build and push rx-gateway image
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      sha: ${{ steps.meta.outputs.sha }}
+    steps:
+      - id: meta
+        run: echo "sha=${{ github.event.workflow_run.head_sha || github.sha }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.meta.outputs.sha }}
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: services/rx-gateway
+          push: true
+          build-args: GIT_SHA=${{ steps.meta.outputs.sha }}
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.sha }}
+            ${{ env.IMAGE }}:main
+          cache-from: type=gha,scope=rx-gateway
+          cache-to: type=gha,mode=max,scope=rx-gateway
+
+  deploy-gateway:
+    name: deploy rx-gateway to Render
+    needs: image
+    if: vars.RENDER_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: render-rx-gateway
+      url: ${{ vars.GATEWAY_URL }}
+    steps:
+      - name: Trigger Render deploy hook with the exact image
+        env:
+          HOOK: ${{ secrets.RENDER_GATEWAY_DEPLOY_HOOK }}
+          IMAGE_REF: ${{ env.IMAGE }}:${{ needs.image.outputs.sha }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "RENDER_GATEWAY_DEPLOY_HOOK secret is not set"; exit 1; fi
+          encoded=$(python3 -c "import urllib.parse,os; print(urllib.parse.quote(os.environ['IMAGE_REF'], safe=''))")
+          # Never echo the hook URL: its key query parameter is a credential.
+          curl -fsS -X POST -o /dev/null -w "Render responded %{http_code}\n" "${HOOK}&imgURL=${encoded}"
+
+  smoke-gateway:
+    name: smoke test rx-gateway
+    needs: [image, deploy-gateway]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: deploy/smoke.sh "${{ vars.GATEWAY_URL }}" "${{ needs.image.outputs.sha }}" 900
+
+  pages:
+    name: deploy web to GitHub Pages
+    needs: image
+    if: vars.PAGES_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.image.outputs.sha }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Build
+        env:
+          VITE_BASE: /rxguard/
+          VITE_GATEWAY_URL: ${{ vars.GATEWAY_URL }}
+          VITE_GIT_SHA: ${{ needs.image.outputs.sha }}
+        run: npm run build
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: web/dist
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  report-failure:
+    name: open issue on failure
+    needs: [image, deploy-gateway, smoke-gateway, pages]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the deploy-failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ needs.image.outputs.sha || github.event.workflow_run.head_sha || github.sha }}
+          RESULTS: image=${{ needs.image.result }} deploy=${{ needs.deploy-gateway.result }} smoke=${{ needs.smoke-gateway.result }} pages=${{ needs.pages.result }}
+        run: |
+          body="CD failed for \`${SHA}\`.
+
+          Job results: ${RESULTS}
+          Run: ${RUN_URL}"
+          existing=$(gh issue list --label deploy-failure --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "CD failed on main" --label deploy-failure,bug,ci --body "$body"
+          fi
