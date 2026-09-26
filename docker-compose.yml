@@ -14,8 +14,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-rxguard}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rxguard-local-dev}
       POSTGRES_DB: ${POSTGRES_DB:-rxguard}
+      GATEWAY_OWNER_PASSWORD: ${GATEWAY_OWNER_PASSWORD:-gateway-owner-local-dev}
+      GATEWAY_APP_PASSWORD: ${GATEWAY_APP_PASSWORD:-gateway-app-local-dev}
     ports: ["5432:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./deploy/db/bootstrap.sql:/bootstrap/bootstrap.sql:ro
+      - ./deploy/db/init.sh:/docker-entrypoint-initdb.d/10-bootstrap.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 5s
@@ -23,9 +28,21 @@ services:
       retries: 10
 
   rx-gateway:
-    build: ./services/rx-gateway
+    build:
+      context: ./services/rx-gateway
+      args:
+        GIT_SHA: ${GIT_SHA:-dev}
     profiles: [gateway, full]
     ports: ["8080:8080"]
+    # Same limit as the Render free plan, so memory problems show up locally first.
+    mem_limit: 512m
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-rxguard}
+      DB_APP_USER: gateway_app
+      DB_APP_PASSWORD: ${GATEWAY_APP_PASSWORD:-gateway-app-local-dev}
+      DB_MIGRATION_USER: gateway_owner
+      DB_MIGRATION_PASSWORD: ${GATEWAY_OWNER_PASSWORD:-gateway-owner-local-dev}
+      RXGUARD_CORS_ORIGINS: http://localhost:5173
     depends_on:
       db: { condition: service_healthy }
 

@@ -38,6 +38,7 @@ jobs:
               - *shared
               - 'services/rx-gateway/**'
               - 'services/interaction-engine/**'
+              - 'deploy/db/**'
             dotnet:
               - *shared
               - 'services/pharmacy-system/**'

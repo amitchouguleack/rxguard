@@ -1,0 +1,27 @@
+# Copyright (c) 2026 Amit Chougule. All rights reserved.
+# Render Blueprint (Blueprint path: deploy/render.yaml). Phase 1 deploys rx-gateway only.
+# The service pulls a prebuilt image from GHCR. CD (.github/workflows/cd.yml) deploys an exact
+# git-SHA tag through the deploy hook; the tag below is only the initial image.
+services:
+  - type: web
+    name: rxguard-rx-gateway
+    runtime: image
+    image:
+      url: ghcr.io/amitchouguleack/rxguard-rx-gateway:main
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      # Neon JDBC URL, e.g. jdbc:postgresql://ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+      - key: DB_URL
+        sync: false
+      - key: DB_APP_USER
+        value: gateway_app
+      - key: DB_APP_PASSWORD
+        sync: false
+      - key: DB_MIGRATION_USER
+        value: gateway_owner
+      - key: DB_MIGRATION_PASSWORD
+        sync: false
+      - key: RXGUARD_CORS_ORIGINS
+        value: https://amitchouguleack.github.io

@@ -2,10 +2,35 @@
 spring:
   application:
     name: rx-gateway
+  datasource:
+    # Runtime role: data access only (REQ-SEC-004).
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/rxguard}
+    username: ${DB_APP_USER:gateway_app}
+    password: ${DB_APP_PASSWORD:}
+    hikari:
+      schema: gateway
+      maximum-pool-size: 3
+      # Keep no idle connections so Neon's free compute can scale to zero.
+      minimum-idle: 0
+      idle-timeout: 60000
+      connection-timeout: 15000
+  flyway:
+    # Migration role: owns the gateway schema. Used only while migrating at startup.
+    user: ${DB_MIGRATION_USER:gateway_owner}
+    password: ${DB_MIGRATION_PASSWORD:}
+    schemas: gateway
+    default-schema: gateway
+    create-schemas: true
 server:
   port: ${PORT:8080}
+  shutdown: graceful
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+rxguard:
+  version: '@project.version@'
+  git-sha: ${RXGUARD_GIT_SHA:dev}
+  cors:
+    allowed-origins: ${RXGUARD_CORS_ORIGINS:http://localhost:5173}

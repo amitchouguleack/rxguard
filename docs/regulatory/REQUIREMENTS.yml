@@ -16,6 +16,22 @@ requirements:
     verification: Test
     phase: 0
     status: implemented
+  - id: REQ-OPS-002
+    title: Deployed version is identifiable
+    description: rx-gateway shall expose GET /api/version returning the git commit SHA the running image was built from.
+    rationale: Lets the CD smoke test prove the new build is live, and makes rollbacks verifiable.
+    risk: []
+    verification: Test
+    phase: 1
+    status: implemented
+  - id: REQ-OPS-003
+    title: Verified continuous delivery
+    description: Every push to main that passes CI shall be built into an image tagged with its git SHA, deployed, and smoke-tested; a failed smoke test shall fail the pipeline and open a GitHub issue.
+    rationale: A broken deploy must be visible immediately, not discovered by a visitor.
+    risk: [RISK-010]
+    verification: Demonstration
+    phase: 1
+    status: in-progress
 
   # ---------- UI ----------
   - id: REQ-UI-001
@@ -58,6 +74,14 @@ requirements:
     verification: Test
     phase: 11
     status: planned
+  - id: REQ-UI-006
+    title: Service wake-up status
+    description: The UI shall show each backend service's status (waking up, up, or unreachable) as text, polling /health until it responds or a time limit passes.
+    rationale: Free-tier services sleep; visitors must see why the first request is slow instead of a broken page.
+    risk: [RISK-010]
+    verification: Test
+    phase: 1
+    status: implemented
 
   # ---------- Prescriptions ----------
   - id: REQ-RX-001
@@ -218,6 +242,14 @@ requirements:
     verification: Test
     phase: 7
     status: planned
+  - id: REQ-SEC-004
+    title: Least-privilege database access
+    description: Each service shall use its own schema, a migration role that owns it, and a runtime role limited to data access (no DDL); a service shall not access another service's schema.
+    rationale: Limits the damage of SQL injection or a compromised service, and later lets the audit table deny UPDATE/DELETE to the runtime role.
+    risk: [RISK-004, RISK-008]
+    verification: Test
+    phase: 1
+    status: implemented
 
   # ---------- Authentication and authorization ----------
   - id: REQ-AUTH-001

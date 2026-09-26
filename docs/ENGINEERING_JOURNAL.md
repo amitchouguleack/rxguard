@@ -32,3 +32,15 @@ Entry format: Symptom → Impact → Investigation → Root cause → Fix → Pr
 **Fix:** Call `cleanup()` in `afterEach` in `web/src/test/setup.ts` ([016b807](https://github.com/amitchouguleack/rxguard/commit/016b807)). Issue [#4](https://github.com/amitchouguleack/rxguard/issues/4).
 **Prevention:** The setup file runs for every test file, so every future component test gets cleanup automatically.
 **Lesson:** Library "auto" behaviors often depend on test-runner globals. When a second test fails and the first passes, suspect leaked state first.
+
+### 2026-09-26 — Containers on the compose network can't reach each other
+**Symptom:** rx-gateway failed at startup: `FlywaySqlUnableToConnectToDbException: Unable to obtain connection from database ... Caused by: java.net.SocketTimeoutException: Connect timed out`
+**Impact:** The gateway couldn't start in docker compose, which blocked measuring it under the 512 MB / 0.1 CPU limit.
+**Investigation:**
+- First hypothesis: 0.1 CPU starves the JVM so badly that the driver's connect timeout expires. That was ruled out when `pg_isready -h db` from a separate `postgres:17-alpine` container on the same network also got "no response", and so did `ping db` / `nc -z db 5432` from busybox. DNS resolved `db` to 172.18.0.2 correctly.
+- From the host, `pg_isready -h 127.0.0.1` got "accepting connections". So Postgres was fine and only container-to-container traffic was blocked.
+- The nftables Docker rules looked correct (the bridge's accept rule had matched 17 packets). But `iptables` warned "iptables-legacy tables present". `iptables-legacy -L FORWARD -v` showed **policy DROP, 17 packets / 1044 bytes**, the same traffic, and allow rules only for `docker0`.
+**Root cause:** This Codespace image has leftover legacy-iptables Docker rules with a FORWARD policy of DROP. Docker 29 programs its rules through nftables, so new user-defined bridges (`br-*`) never get a legacy allow rule. With `net.bridge.bridge-nf-call-iptables=1`, traffic inside the bridge is filtered by both rule sets, and the legacy one drops it. Phase 0 didn't catch this because no container talked to another.
+**Fix:** A local, non-persistent rule: `sudo iptables-legacy -I DOCKER-USER -i br-+ -o br-+ -j ACCEPT`. It only allows traffic that stays inside a single compose bridge. Issue [#13](https://github.com/amitchouguleack/rxguard/issues/13).
+**Prevention:** The README's Codespaces section documents the symptom and the one-line fix. GitHub-hosted CI runners don't have the legacy rules, and Testcontainers talks to its database through a published host port, so CI isn't affected.
+**Lesson:** When a timeout could be "slow" or "blocked", test the same path with a trivial client first. One `pg_isready` from a sibling container separated the CPU theory from the network theory in seconds. And when two firewall frameworks are present, check both.
