@@ -20,7 +20,45 @@ flowchart LR
 - Test reports (JUnit XML, TRX) are uploaded as artifacts. They feed the traceability matrix in Phase 13.
 - All third-party actions are pinned to commit SHAs. Dependabot updates them weekly.
 
-CD (GHCR → Render → smoke tests) is added in Phase 1.
+## CD (`.github/workflows/cd.yml`)
+
+```mermaid
+flowchart LR
+  CI[ci passes on main] --> IMG[build image<br/>push to GHCR<br/>tags: git SHA, main]
+  D[manual run<br/>workflow_dispatch] --> IMG
+  IMG -->|RENDER_DEPLOY_ENABLED| HOOK[Render deploy hook<br/>imgURL = image:SHA]
+  HOOK --> SMOKE[deploy/smoke.sh<br/>wait for SHA on /api/version<br/>check /health + DB health]
+  IMG -->|PAGES_ENABLED| PAGES[build web<br/>deploy to GitHub Pages]
+  SMOKE -. failure .-> ISSUE[open or update<br/>deploy-failure issue]
+  PAGES -. failure .-> ISSUE
+  HOOK -. failure .-> ISSUE
+```
+
+- CD starts from a successful `ci` run on a push to `main` (`workflow_run`), or manually. It always builds the exact commit that CI tested (`workflow_run.head_sha`).
+- The Render service is image-backed. The deploy hook gets `imgURL=ghcr.io/amitchouguleack/rxguard-rx-gateway:<sha>`, so the tested image is exactly what runs ([ADR 0007](decisions/0007-image-based-deploys.md)).
+- `deploy/smoke.sh` allows up to 15 minutes, because a deploy plus a free-tier cold start is slow. It passes only when `/api/version` reports the new SHA, and `/health` and `/actuator/health` (which includes the database) report `UP`.
+- Any failed job opens a `deploy-failure` issue, or comments on the one already open.
+
+### Configuration
+
+| Name | Kind | Value |
+|---|---|---|
+| `RENDER_GATEWAY_DEPLOY_HOOK` | Actions secret | Render → service → Settings → Deploy Hook. The `key` parameter is a credential, and the workflow never prints it. |
+| `GATEWAY_URL` | Actions variable | The service's `https://….onrender.com` URL |
+| `RENDER_DEPLOY_ENABLED` | Actions variable | `true` once the Render service exists |
+| `PAGES_ENABLED` | Actions variable | `true` once Pages uses "GitHub Actions" as its source |
+
+Database credentials (`DB_URL`, `DB_APP_PASSWORD`, `DB_MIGRATION_PASSWORD`) live only in Render's environment settings, never in GitHub.
+
+### Rollback
+Call the deploy hook with a previous image tag. Every merged commit has one in GHCR:
+
+```bash
+curl -fsS -X POST "$RENDER_GATEWAY_DEPLOY_HOOK&imgURL=ghcr.io%2Famitchouguleack%2Frxguard-rx-gateway%3A<previous-sha>"
+deploy/smoke.sh "$GATEWAY_URL" <previous-sha>
+```
+
+This gets tested for real in Phase 13.
 
 ## Free-tier limits (checked against provider docs)
 

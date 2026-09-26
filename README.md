@@ -18,7 +18,7 @@ Built phase by phase. Only finished features are listed.
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Foundation: dev container, service skeletons, CI, requirements baseline | ✅ |
-| 1 | Walking skeleton deployed ($0 hosting) | ⏳ |
+| 1 | Walking skeleton deployed ($0 hosting): Postgres + Flyway, CD to Render and GitHub Pages | 🚧 |
 
 ## Architecture (planned)
 
@@ -38,6 +38,7 @@ Design decisions are recorded as [ADRs](docs/decisions/README.md), including wha
 2. Start only what you want to look at (the Codespace has 2 cores):
    ```bash
    docker compose --profile phi up        # phi-shield on :8000
+   docker compose --profile gateway up    # db + rx-gateway on :8080 (limited to 512 MB, like production)
    docker compose --profile full up       # db + all three services
    ```
 3. Check health: `curl localhost:8080/health`, `curl localhost:8081/health`, `curl localhost:8000/health`.
@@ -52,6 +53,14 @@ Run each service's tests:
 (cd services/interaction-engine && cmake -S . -B build -G Ninja -DRXG_SANITIZE=ON && cmake --build build && ctest --test-dir build)
 (cd web && npm test)
 ```
+
+**If the gateway can't reach the database** (`Connect timed out` to `db:5432`) in a Codespace that isn't using this repo's dev container, the image's leftover legacy-iptables rules are dropping traffic between containers. Allow traffic inside compose bridges with:
+
+```bash
+sudo iptables-legacy -I DOCKER-USER -i br-+ -o br-+ -j ACCEPT
+```
+
+The details are in the [engineering journal](docs/ENGINEERING_JOURNAL.md).
 
 Codespaces stop after **30 minutes idle** by default, so nothing keeps running (or using free hours) when you walk away.
 
