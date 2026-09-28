@@ -16,4 +16,19 @@ docker compose --profile db up -d && docker compose build rx-gateway
 deploy/measure-gateway.sh [--defaults]
 ```
 
-The live Render cold-start time will be added after the first deploy.
+## rx-gateway on Render (live)
+
+Measured against the live free-tier service after it had been idle for 18 minutes (asleep), on 2026-09-28. This is one sample, taken from the Codespace, so the time includes network latency.
+
+| Request | Time |
+|---|---|
+| First `GET /health` (Render wakes the service) | 52.4 s |
+| Next `GET /api/version` (warm) | 0.14 s |
+| `GET /actuator/health` (includes the database; Neon may also have been asleep) | 1.0 s |
+
+```bash
+# after at least 15 minutes with no traffic:
+curl -s -o /dev/null -w "%{time_total}s\n" https://rxguard-rx-gateway.onrender.com/health
+```
+
+Deploy speed: on the first automatic CD run (run `36401050163`), the new build was serving 45 s after the smoke test started.
