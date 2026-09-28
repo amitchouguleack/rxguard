@@ -44,3 +44,15 @@ Entry format: Symptom → Impact → Investigation → Root cause → Fix → Pr
 **Fix:** A local, non-persistent rule: `sudo iptables-legacy -I DOCKER-USER -i br-+ -o br-+ -j ACCEPT`. It only allows traffic that stays inside a single compose bridge. Issue [#13](https://github.com/amitchouguleack/rxguard/issues/13).
 **Prevention:** The README's Codespaces section documents the symptom and the one-line fix. GitHub-hosted CI runners don't have the legacy rules, and Testcontainers talks to its database through a published host port, so CI isn't affected.
 **Lesson:** When a timeout could be "slow" or "blocked", test the same path with a trivial client first. One `pg_isready` from a sibling container separated the CPU theory from the network theory in seconds. And when two firewall frameworks are present, check both.
+
+### 2026-09-28 — First Render deploy: `password authentication failed for user gateway_owner`
+**Symptom:** The first deploy of `rxguard-rx-gateway` on Render failed at startup with `password authentication failed for user gateway_owner`.
+**Impact:** The service never went live on its first deploy. Nothing was lost, because nothing had been served yet.
+**Investigation:** `gateway_owner` is the migration role, and Flyway connects with it before anything else starts, so this was the first credential the app used. Both roles had been created on Neon by `deploy/db/bootstrap.sql` (it printed `CREATE ROLE` twice), and the passwords were copied into Render by hand. The mismatch was fixed by rotating rather than diagnosed, so the exact difference between the password stored in Neon and the value in Render is unknown.
+**Root cause:** Not confirmed. The password Render sent for `gateway_owner` didn't match the one Neon had stored.
+**Fix:** In the Neon SQL Editor, rotated both passwords (`ALTER ROLE ... PASSWORD`), updated `DB_APP_PASSWORD` and `DB_MIGRATION_PASSWORD` in Render's environment settings, and redeployed. On 2026-09-28 the live service reported `/health` UP, `/actuator/health` UP (this check uses the database through `gateway_app`), and `/api/version` gitSha `9715ca2`. Issue [#15](https://github.com/amitchouguleack/rxguard/issues/15).
+**Prevention:**
+- Startup fails fast on bad credentials, because Flyway runs before the web server. So a wrong password shows up as a failed deploy, not as a live service with a broken database.
+- `deploy/smoke.sh` also checks `/actuator/health`, which includes the database, so CD catches a bad app-role password too.
+- For future services (`pharmacy_*`, `phi_*`): test each role's credentials with `psql` from the Codespace before copying them into Render.
+**Lesson:** Hand-copying secrets between two dashboards is the weakest step in this setup. Verify credentials at the source before relying on them in a deploy.
