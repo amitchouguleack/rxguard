@@ -5,6 +5,9 @@
 
 End-to-end e-prescribing simulation: HL7 v2 → FHIR R4, SMART on FHIR, NCPDP SCRIPT-inspired messaging, EPCS, and PHI safeguards, built as four services in four languages (Java · C++ · C# · Python) plus a React UI.
 
+**Live demo:** https://amitchouguleack.github.io/rxguard/ · API: https://rxguard-rx-gateway.onrender.com/api/version
+(Free hosting: the API sleeps after 15 minutes idle, and the page shows it waking up.)
+
 **Solo project — designed, built, tested, deployed, and documented end to end by Amit Chougule.**
 
 > ⚠️ **Not for cloning or reuse.** © Amit Chougule. All rights reserved. This repo is public so recruiters and hiring managers can review my work. It is not open source. You may view the code and run the demo to evaluate me as a candidate, but you may not copy, clone for reuse, fork for your own projects, or redistribute any part of it without my written permission. See [LICENSE](LICENSE).
