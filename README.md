@@ -16,6 +16,17 @@ End-to-end e-prescribing simulation: HL7 v2 → FHIR R4, SMART on FHIR, NCPDP SC
 
 > **SYNTHETIC DATA — NOT FOR CLINICAL USE.** Every patient, prescriber, and pharmacy is generated.
 
+## How I built this: Plan → Build → Debug → Test → CI/CD → Deploy
+
+The full story, told honestly and with real numbers only, is in [docs/END_TO_END.md](docs/END_TO_END.md):
+
+- **[Plan](docs/END_TO_END.md#planning):** four services in four languages, a $0 budget, synthetic data only, and requirements first.
+- **[Build](docs/END_TO_END.md#building-phase-by-phase):** one entry per phase, each with its PR.
+- **[Debug](docs/END_TO_END.md#debugging):** real failures, from symptom to root cause to fix and prevention.
+- **[Test](docs/END_TO_END.md#testing):** tests tagged with requirement IDs, real databases in tests, and tests proven to fail.
+- **[CI/CD](docs/END_TO_END.md#cicd):** path-filtered CI, and SHA-pinned images deployed and smoke-tested on every merge.
+- **[Deploy](docs/END_TO_END.md#deployment):** the $0 hosting trade-offs, and why no real PHI can ever live here.
+
 ## Status
 
 Built phase by phase. Only finished features are listed.
