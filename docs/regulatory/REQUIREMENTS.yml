@@ -31,7 +31,7 @@ requirements:
     risk: [RISK-010]
     verification: Demonstration
     phase: 1
-    status: in-progress
+    status: implemented
 
   # ---------- UI ----------
   - id: REQ-UI-001

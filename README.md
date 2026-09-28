@@ -21,7 +21,8 @@ Built phase by phase. Only finished features are listed.
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Foundation: dev container, service skeletons, CI, requirements baseline | ✅ |
-| 1 | Walking skeleton deployed ($0 hosting): Postgres + Flyway, CD to Render and GitHub Pages | 🚧 |
+| 1 | Walking skeleton deployed ($0 hosting): Postgres + Flyway, CD to Render and GitHub Pages | ✅ |
+| 2 | Core domain, validation, and medical terminologies | ⏳ |
 
 ## Architecture (planned)
 
