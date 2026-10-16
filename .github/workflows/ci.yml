@@ -70,7 +70,7 @@ jobs:
       - name: Build, lint (Spotless), test
         run: ./mvnw -B -ntp verify
       - if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results-java
           path: services/rx-gateway/target/surefire-reports/*.xml
@@ -100,7 +100,7 @@ jobs:
       - name: Test
         run: dotnet test PharmacySystem.slnx --no-build -c Release --logger "trx;LogFileName=results.trx" --results-directory TestResults
       - if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results-dotnet
           path: services/pharmacy-system/TestResults/*.trx
@@ -127,7 +127,7 @@ jobs:
       - name: Test (coverage gate 85%)
         run: pytest --junitxml=reports/junit.xml
       - if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results-python
           path: services/phi-shield/reports/junit.xml
@@ -157,7 +157,7 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure --output-junit junit.xml
       - if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results-cpp
           path: services/interaction-engine/build/junit.xml
@@ -184,7 +184,7 @@ jobs:
       - name: Build
         run: npm run build
       - if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results-web
           path: web/reports/junit.xml
