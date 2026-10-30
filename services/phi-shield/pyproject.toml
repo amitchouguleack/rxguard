@@ -9,7 +9,7 @@ version = "0.0.1"
 description = "RxGuard de-identification, terminology normalization, and access-anomaly detection."
 requires-python = ">=3.12,<3.13"
 dependencies = [
-  "fastapi==0.141.1",
+  "fastapi==0.162.0",
   "uvicorn[standard]==0.54.0",
   "pydantic==2.13.5",
 ]
