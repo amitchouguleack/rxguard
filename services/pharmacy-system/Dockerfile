@@ -8,7 +8,7 @@ RUN dotnet restore src/PharmacySystem.Api/PharmacySystem.Api.csproj
 COPY src src
 RUN dotnet publish src/PharmacySystem.Api/PharmacySystem.Api.csproj -c Release -o /out --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:11.0
 WORKDIR /app
 COPY --from=build /out .
 ENV ASPNETCORE_HTTP_PORTS=8081
