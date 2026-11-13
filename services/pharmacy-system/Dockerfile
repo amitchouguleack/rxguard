@@ -1,6 +1,6 @@
 # Copyright (c) 2026 Amit Chougule. All rights reserved.
 # syntax=docker/dockerfile:1
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 COPY Directory.Build.props .editorconfig ./
 COPY src/PharmacySystem.Api/PharmacySystem.Api.csproj src/PharmacySystem.Api/
